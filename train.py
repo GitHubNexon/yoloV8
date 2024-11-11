@@ -1,5 +1,4 @@
 # train.py
-
 import os
 from ultralytics import YOLO
 
@@ -35,7 +34,6 @@ model.train(
     warmup_epochs=3,         # Warmup epochs (helps stabilize early training)
     name='cropV1',   # Name for the saved model
 
-     #Early Stopping Configuration
     patience=3,              # If no improvement in validation mAP after 3 epochs, stop training
     save_period=3,          # Save the model every 2 epochs (you can adjust this)
 )
