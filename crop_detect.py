@@ -75,7 +75,7 @@ def detect_from_webcam():
 
 def detect_from_mobilecam():
     # URL for the mobile camera stream
-    video_url = 'http://192.168.88.25:4747/video'
+    video_url = 'http://192.168.100.192:4747/video'
     cap = cv2.VideoCapture(video_url)
 
     if not cap.isOpened():
