@@ -8,15 +8,10 @@ import mobile
 model_path = r"C:\4th Year\Thesis-Projects\YoloV8\ultralytics\runs\CropV1Trained\cropV1\weights\best.pt"
 model = YOLO(model_path)
 
-# Define result folder path
 results_path = r"C:\4th Year\Thesis-Projects\YoloV8\ultralytics\results"
-os.makedirs(results_path, exist_ok=True)  # Ensure the folder exists
+os.makedirs(results_path, exist_ok=True)
 
 def get_incremental_filename(base_path, base_name, extension):
-    """
-    Generates a unique filename with an incrementing number in the results folder.
-    For example, if 'webcam_result1.avi' exists, it will create 'webcam_result2.avi'.
-    """
     i = 1
     while True:
         filename = f"{base_name}{i}{extension}"
@@ -26,15 +21,14 @@ def get_incremental_filename(base_path, base_name, extension):
 
 def detect_from_webcam():
     # Open the webcam
-    cap = cv2.VideoCapture(0)  # Change to your camera index if necessary
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not access the camera.")
         sys.exit()
 
-    # Get an incremented filename for the video output
     video_filename = get_incremental_filename(results_path, "webcam_result", ".avi")
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    fps = 20.0  # Frames per second
+    fps = 20.0 
     frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
     out = cv2.VideoWriter(video_filename, fourcc, fps, frame_size)
@@ -47,26 +41,23 @@ def detect_from_webcam():
             print("Error: Failed to capture image from camera.")
             break
 
-        # Perform detection
         results = model(frame)
 
-        # Ensure results is a list and take the first item
-        result = results[0]  # Get the first detection result
+        result = results[0]  
 
-        # Render results on the frame
-        frame = result.plot()  # Use plot on the first result
+        frame = result.plot()  
 
-        # Display the frame with detection boxes
+        
         cv2.imshow('Crop Detection - Webcam', frame)
 
-        # Write the frame to the video file
+       
         out.write(frame)
 
-        # Exit the loop when 'q' is pressed
+      
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # Release the camera, video writer, and close windows
+    
     cap.release()
     out.release()
     cv2.destroyAllWindows()
@@ -74,7 +65,7 @@ def detect_from_webcam():
 
 
 def detect_from_mobilecam():
-    # URL for the mobile camera stream
+   
     video_url = 'http://192.168.100.192:4747/video'
     cap = cv2.VideoCapture(video_url)
 
@@ -97,12 +88,12 @@ def detect_from_mobilecam():
             break
 
         results = model(frame)
-        frame = results[0].plot()  # Render results on the frame
+        frame = results[0].plot() 
 
         cv2.imshow('Crop Detection - MobileCam', frame)
         out.write(frame)
 
-        # Add slight delay after showing the frame
+       
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
@@ -120,27 +111,27 @@ def detect_from_image(image_path):
         print("Error: Image not found.")
         sys.exit()
 
-    # Perform detection
+    
     results = model(image)
 
-    # Check if the results are a list and access the first result
+  
     if isinstance(results, list):
-        result = results[0]  # Get the first detection result
+        result = results[0] 
     else:
-        result = results  # Otherwise, directly use the results object
+        result = results  
 
-    # Render results on the image
-    image = result.plot()  # Now use plot() on the individual result
+   
+    image = result.plot()  
 
-    # Save the image with detections to the results folder with an incremented filename
+    
     image_filename = get_incremental_filename(results_path, "image_output", ".jpg")
     cv2.imwrite(image_filename, image)
     print(f"Image saved at {image_filename}")
 
-    # Display the image with detection boxes
+    
     cv2.imshow('Crop Detection - Image', image)
 
-    # Wait until a key is pressed and then close the window
+    
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -153,13 +144,13 @@ def detect_from_video(video_path):
         print("Error: Could not open video.")
         sys.exit()
 
-    # Get an incremented filename for the output video
+    
     video_filename = get_incremental_filename(results_path, "video_output", ".avi")
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec for .avi file format
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-    # Initialize VideoWriter to save the processed video
+    
     out = cv2.VideoWriter(video_filename, fourcc, fps, frame_size)
     print(f"Saving processed video as {video_filename}")
 
@@ -169,29 +160,29 @@ def detect_from_video(video_path):
             print("Finished processing video.")
             break
 
-        # Perform detection
+        
         results = model(frame)
 
-        # Check if the results are a list and access the first result
+      
         if isinstance(results, list):
-            result = results[0]  # Get the first detection result
+            result = results[0]  
         else:
-            result = results  # Otherwise, directly use the results object
+            result = results 
 
-        # Render results on the frame
-        frame = result.plot()  # Now use plot() on the individual result
+       
+        frame = result.plot()  
 
-        # Display the frame with detection boxes
+        
         cv2.imshow('Crop Detection - Video', frame)
 
-        # Write the processed frame to the output video file
+        
         out.write(frame)
 
-        # Exit the loop when 'q' is pressed
+       
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # Release the video, video writer, and close windows
+    
     cap.release()
     out.release()
     cv2.destroyAllWindows()
