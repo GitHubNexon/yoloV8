@@ -4,6 +4,8 @@ import os
 from ultralytics import YOLO
 import mobile  
 
+
+print("Arguments passed to script:", sys.argv)
 # Load the trained model
 model_path = r"C:\4th Year\Thesis-Projects\YoloV8\ultralytics\runs\CropV1Trained\cropV1\weights\best.pt"
 model = YOLO(model_path)
@@ -128,7 +130,7 @@ def detect_from_image(image_path):
     cv2.imwrite(image_filename, image)
     print(f"Image saved at {image_filename}")
 
-    
+    print(f"results {results}")
     cv2.imshow('Crop Detection - Image', image)
 
     
