@@ -1,9 +1,12 @@
 import cv2
 import sys
 import os
+import time
 from ultralytics import YOLO
 import mobile  
 
+
+print("Arguments passed to script:", sys.argv)
 # Load the trained model
 model_path = r"C:\4th Year\Thesis-Projects\YoloV8\ultralytics\runs\CropV1Trained\cropV1\weights\best.pt"
 model = YOLO(model_path)
@@ -25,35 +28,65 @@ def detect_from_webcam():
     if not cap.isOpened():
         print("Error: Could not access the camera.")
         sys.exit()
+    
 
-    video_filename = get_incremental_filename(results_path, "webcam_result", ".avi")
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    fps = 20.0 
+    # video_filename = get_incremental_filename(results_path, "webcam_result", ".avi")
+    video_filename = get_incremental_filename(results_path, "webcam_result", ".mp4")
+    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'H264')  # H.264 codec for MP4 files
     frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-
+    fps = 20
     out = cv2.VideoWriter(video_filename, fourcc, fps, frame_size)
 
     print(f"Recording video to {video_filename}. Press 'q' to stop recording.")
+    prev_time = time.time()
+
+    frame_count = 0
+    target_fps = 20
+    frame_interval = int(fps / target_fps)
 
     while True:
         ret, frame = cap.read()
         if not ret:
             print("Error: Failed to capture image from camera.")
             break
+        
+        start_time = time.time()
 
-        results = model(frame)
+        if frame_count % frame_interval == 0:
+            results = model(frame)
+            result = results[0]
+            frame = result.plot()
+            
+        frame_count += 1
 
-        result = results[0]  
+        # Calculate FPS and MS
+        elapsed_time = time.time() - start_time
+        fps_display = 1.0 / elapsed_time  # FPS
+        ms_display = elapsed_time * 1000  # MS
 
-        frame = result.plot()  
+
+        # Get the frame width and height
+        frame_height, frame_width = frame.shape[:2]
 
         
-        cv2.imshow('Crop Detection - Webcam', frame)
+        text_position_fps = (frame_width - 200, 30)
+        text_position_ms = (frame_width - 200, 70)
 
-       
+        # Display FPS and MS on the frame
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.7  
+        color = (0, 255, 0)  
+        thickness = 2  
+
+        # Draw FPS and MS on the frame
+        cv2.putText(frame, f"FPS: {fps_display:.2f}", text_position_fps, font, font_scale, color, thickness, cv2.LINE_AA)
+        cv2.putText(frame, f"MS: {ms_display:.2f}ms", text_position_ms, font, font_scale, color, thickness, cv2.LINE_AA)
+        
+        cv2.imshow('Crop Detection - Webcam', frame)    
         out.write(frame)
 
-      
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -66,29 +99,58 @@ def detect_from_webcam():
 
 def detect_from_mobilecam():
    
-    video_url = 'http://192.168.100.192:4747/video'
+    # video_url = 'http://192.168.88.25:4747/video'
+    video_url = 'http://192.168.0.151:4747/video'
     cap = cv2.VideoCapture(video_url)
 
     if not cap.isOpened():
         print("Error: Could not access the mobile camera.")
         sys.exit()
-
-    video_filename = get_incremental_filename(results_path, "mobilecam_result", ".avi")
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    fps = 40.0
+    
+    # video_filename = get_incremental_filename(results_path, "mobilecam_result", ".avi")
+    video_filename = get_incremental_filename(results_path, "mobilecam_result", ".mp4")
+    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'H264')  # H.264 codec for MP4 files
     frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-
+    fps = 20.0
     out = cv2.VideoWriter(video_filename, fourcc, fps, frame_size)
     print(f"Recording video to {video_filename}. Press 'q' to stop recording.")
 
+    prev_time = time.time()
+
+    
     while True:
         ret, frame = cap.read()
         if not ret:
             print("Error: Failed to capture image from mobile camera.")
             break
+        
+        start_time = time.time()
 
         results = model(frame)
-        frame = results[0].plot() 
+        frame = results[0].plot()
+         
+        elapsed_time = time.time() - start_time
+        fps_display = 1.0 / elapsed_time  # FPS
+        ms_display = elapsed_time * 1000  # MS
+
+        # Get the frame width and height
+        frame_height, frame_width = frame.shape[:2]
+
+        # Set the text position to the upper right
+        text_position_fps = (frame_width - 200, 30)
+        text_position_ms = (frame_width - 200, 70)
+
+        # Display FPS and MS on the frame
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.7  # Smaller text size
+        color = (0, 255, 0)  # Green color
+        thickness = 2  # Text thickness
+
+        # Draw FPS and MS on the frame
+        cv2.putText(frame, f"FPS: {fps_display:.2f}", text_position_fps, font, font_scale, color, thickness, cv2.LINE_AA)
+        cv2.putText(frame, f"MS: {ms_display:.2f}ms", text_position_ms, font, font_scale, color, thickness, cv2.LINE_AA)
+
 
         cv2.imshow('Crop Detection - MobileCam', frame)
         out.write(frame)
@@ -128,7 +190,7 @@ def detect_from_image(image_path):
     cv2.imwrite(image_filename, image)
     print(f"Image saved at {image_filename}")
 
-    
+    print(f"results {results}")
     cv2.imshow('Crop Detection - Image', image)
 
     
@@ -145,8 +207,10 @@ def detect_from_video(video_path):
         sys.exit()
 
     
-    video_filename = get_incremental_filename(results_path, "video_output", ".avi")
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    # video_filename = get_incremental_filename(results_path, "video_output", ".avi")
+    video_filename = get_incremental_filename(results_path, "mobilecam_result", ".mp4")
+    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'H264')  # H.264 codec for MP4 files
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
